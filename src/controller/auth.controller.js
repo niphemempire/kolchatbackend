@@ -58,7 +58,9 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
     try {
-        const isProduction = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === "production";
+        const isProduction = process.env.NODE_ENV && 
+                             process.env.NODE_ENV.toLowerCase() === "production" && 
+                             process.env.FRONTEND_URL;
         res.cookie("token", "", {
             maxAge: 0,
             httpOnly: true,

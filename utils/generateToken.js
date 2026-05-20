@@ -6,7 +6,9 @@ const generateTokenandSetCookie = (userId, res) => {
     }
     
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "15d" });
-    const isProduction = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === "production";
+    const isProduction = process.env.NODE_ENV && 
+                         process.env.NODE_ENV.toLowerCase() === "production" && 
+                         process.env.FRONTEND_URL;
     res.cookie("token", token, {
         maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
         httpOnly: true,
