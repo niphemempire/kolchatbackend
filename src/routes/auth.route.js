@@ -2,7 +2,7 @@ import express from 'express';
 
 import dotenv from 'dotenv';
 import { login, logout, signup, getMe } from '../controller/auth.controller.js';
-import protectRoute from '../middleware/protectRoute.js';
+import protectRoute from '../../middleware/protectRoute.js';
 dotenv.config();
 
 const router = express.Router();
