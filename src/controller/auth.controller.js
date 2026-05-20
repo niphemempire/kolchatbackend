@@ -23,7 +23,16 @@ export const signup = async (req, res) => {
         if (newUser) {
             await generateTokenandSetCookie(newUser._id, res);
             await newUser.save();
-            res.status(201).json({ message: "User created successfully" });
+            res.status(201).json({
+                message: "User created successfully",
+                user: {
+                    _id: newUser._id,
+                    fullName: newUser.fullName,
+                    username: newUser.username,
+                    email: newUser.email,
+                    profilePicture: newUser.profilePicture || ''
+                }
+            });
         } else {
             res.status(400).json({ message: "Failed to create user" });
         } 
@@ -50,7 +59,16 @@ export const login = async (req, res) => {
 
         await generateTokenandSetCookie(user._id, res);
 
-        res.status(200).json({ message: "Logged in successfully" });
+        res.status(200).json({
+            message: "Logged in successfully",
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                username: user.username,
+                email: user.email,
+                profilePicture: user.profilePicture || ''
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: "Error occurred while logging in" });
     }
@@ -70,5 +88,24 @@ export const logout = (req, res) => {
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
         res.status(500).json({ message: "Error occurred while logging out" });  
+    }
+}
+
+export const getMe = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            username: user.username,
+            email: user.email,
+            profilePicture: user.profilePicture || ''
+        });
+    } catch (error) {
+        console.error("Error in getMe:", error);
+        res.status(500).json({ message: "Error fetching user profile" });
     }
 }
