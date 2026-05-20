@@ -1,6 +1,6 @@
 // const express = require('express');
 import express from 'express';
-
+import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieparser from 'cookie-parser';
 
@@ -15,6 +15,15 @@ const PORT = process.env.PORT || 5000;
 
 
 dotenv.config();
+
+const isProduction = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === "production";
+
+app.use(cors({
+  origin: isProduction 
+    ? [process.env.FRONTEND_URL].filter(Boolean) 
+    : function (origin, callback) { callback(null, true); },
+  credentials: true,
+}));
 
 app.use(express.json()); // Parse JSON request bodies
 app.use(cookieparser()); // Parse cookies from incoming requests

@@ -58,7 +58,13 @@ export const login = async (req, res) => {
 
 export const logout = (req, res) => {
     try {
-        res.cookie("token", "", {maxAge: 0});
+        const isProduction = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === "production";
+        res.cookie("token", "", {
+            maxAge: 0,
+            httpOnly: true,
+            sameSite: isProduction ? "none" : "lax",
+            secure: isProduction
+        });
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
         res.status(500).json({ message: "Error occurred while logging out" });  

@@ -6,11 +6,12 @@ const generateTokenandSetCookie = (userId, res) => {
     }
     
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "15d" });
+    const isProduction = process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === "production";
     res.cookie("token", token, {
         maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
         httpOnly: true,
-        sameSite: "lax",
-        // secure: false // Set to false for development (HTTP), true for production (HTTPS)
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction
     });
 }   
 
