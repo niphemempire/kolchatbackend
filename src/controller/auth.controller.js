@@ -32,7 +32,8 @@ export const signup = async (req, res) => {
                     fullName: newUser.fullName,
                     username: newUser.username,
                     email: newUser.email,
-                    profilePicture: newUser.profilePicture || ''
+                    profilePicture: newUser.profilePicture || '',
+                    bio: newUser.bio || '',
                 }
             });
         } else {
@@ -68,7 +69,8 @@ export const login = async (req, res) => {
                 fullName: user.fullName,
                 username: user.username,
                 email: user.email,
-                profilePicture: user.profilePicture || ''
+                profilePicture: user.profilePicture || '',
+                bio: user.bio || '',
             }
         });
     } catch (error) {
@@ -104,7 +106,8 @@ export const getMe = async (req, res) => {
             fullName: user.fullName,
             username: user.username,
             email: user.email,
-            profilePicture: user.profilePicture || ''
+            profilePicture: user.profilePicture || '',
+            bio: user.bio || '',
         });
     } catch (error) {
         console.error("Error in getMe:", error);

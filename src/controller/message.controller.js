@@ -9,7 +9,7 @@ export const getConversations = async (req, res) => {
             participants: userId,
             messages: { $exists: true, $not: { $size: 0 } },
         })
-            .populate("participants", "username profilePicture fullName")
+            .populate("participants", "username profilePicture fullName bio")
             .sort({ updatedAt: -1 })
             .lean();
 
@@ -48,6 +48,7 @@ export const getConversations = async (req, res) => {
                     username: other.username,
                     fullName: other.fullName || other.username,
                     profilePicture: other.profilePicture || "",
+                    bio: other.bio || "",
                     lastMessage: preview,
                     lastMessageAt: lastMessage.createdAt,
                     unread,
