@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 
 const generateTokenandSetCookie = (userId, res) => {
-    if (!process.env.JWT_SECRET) {
+    const jwtSecret = process.env.JWT_SECRET?.trim();
+    if (!jwtSecret) {
         throw new Error("JWT_SECRET is not defined in .env file");
     }
-    
-    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "15d" });
+
+    const token = jwt.sign({ id: userId }, jwtSecret, { expiresIn: "15d" });
     const isProduction = process.env.NODE_ENV && 
                          process.env.NODE_ENV.toLowerCase() === "production" && 
                          process.env.FRONTEND_URL;
