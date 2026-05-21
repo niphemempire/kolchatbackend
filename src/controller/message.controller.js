@@ -1,5 +1,6 @@
 import Conversation from "../../models/conversatio.model.js";
 import Message from "../../models/message.model.js";
+import { emitToUser, serializeMessage } from "../socket/socketEmitter.js";
 
 export const getConversations = async (req, res) => {
     try {
@@ -104,6 +105,12 @@ export const sendMessage = async (req, res) => {
             }),
         ]);
 
+        const payload = serializeMessage(newMessage);
+        emitToUser(String(receiverId), "newMessage", payload);
+        emitToUser(String(senderId), "newMessage", payload);
+        emitToUser(String(receiverId), "conversationUpdated");
+        emitToUser(String(senderId), "conversationUpdated");
+
         res.status(201).json({ message: "Message sent successfully", newMessage });
     } catch (error) {
         console.error("Error sending message:", error);
@@ -131,6 +138,10 @@ export const getMessage = async (req, res) => {
 
         if (unreadMessageIds.length > 0) {
             await Message.updateMany({ _id: { $in: unreadMessageIds } }, { read: true });
+            emitToUser(String(userToChatId), "messagesRead", {
+                readerId: String(senderId),
+                messageIds: unreadMessageIds.map(String),
+            });
         }
 
         const messages = conversation.messages.map((msg) => {
@@ -168,6 +179,10 @@ export const updateMessage = async (req, res) => {
       return res.status(404).json({ error: "Message not found or unauthorized." });
     }
 
+    const payload = serializeMessage(updatedMessage);
+    emitToUser(String(updatedMessage.receiverId), "messageUpdated", payload);
+    emitToUser(String(updatedMessage.senderId), "messageUpdated", payload);
+
     res.status(200).json({ message: "Message updated successfully", updatedMessage });
   } catch (error) {
     console.error("Error updating message:", error);
@@ -189,6 +204,12 @@ export const deleteMessage = async (req, res) => {
     if (!deletedMessage) {
       return res.status(404).json({ error: "Message not found or unauthorized." });
     }
+
+    const payload = serializeMessage(deletedMessage);
+    emitToUser(String(deletedMessage.receiverId), "messageDeleted", payload);
+    emitToUser(String(deletedMessage.senderId), "messageDeleted", payload);
+    emitToUser(String(deletedMessage.receiverId), "conversationUpdated");
+    emitToUser(String(deletedMessage.senderId), "conversationUpdated");
 
     res.status(200).json({ message: "Message deleted successfully", deletedMessage });
   } catch (error) {
