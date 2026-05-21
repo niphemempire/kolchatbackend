@@ -1,6 +1,74 @@
 import Conversation from "../../models/conversatio.model.js";
 import Message from "../../models/message.model.js";
 
+export const getConversations = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const conversations = await Conversation.find({
+            participants: userId,
+            messages: { $exists: true, $not: { $size: 0 } },
+        })
+            .populate("participants", "username profilePicture fullName")
+            .sort({ updatedAt: -1 })
+            .lean();
+
+        const list = await Promise.all(
+            conversations.map(async (conv) => {
+                const other = conv.participants.find(
+                    (p) => String(p._id) !== String(userId)
+                );
+                if (!other) return null;
+
+                const lastMessage = await Message.findOne({
+                    $or: [
+                        { senderId: userId, receiverId: other._id },
+                        { senderId: other._id, receiverId: userId },
+                    ],
+                })
+                    .sort({ createdAt: -1 })
+                    .select("message createdAt senderId receiverId read deleted")
+                    .lean();
+
+                if (!lastMessage) return null;
+
+                const unread = await Message.countDocuments({
+                    senderId: other._id,
+                    receiverId: userId,
+                    read: false,
+                    deleted: false,
+                });
+
+                const preview = lastMessage.deleted
+                    ? "This message was deleted"
+                    : lastMessage.message;
+
+                return {
+                    _id: other._id,
+                    username: other.username,
+                    fullName: other.fullName || other.username,
+                    profilePicture: other.profilePicture || "",
+                    lastMessage: preview,
+                    lastMessageAt: lastMessage.createdAt,
+                    unread,
+                };
+            })
+        );
+
+        const filtered = list.filter(Boolean);
+        filtered.sort(
+            (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+        );
+
+        res.status(200).json(filtered);
+    } catch (error) {
+        console.error("Error fetching conversations:", error);
+        res.status(500).json({
+            error: error.message || "Error occurred while fetching conversations",
+        });
+    }
+};
+
 export const sendMessage = async (req, res) => {
     try {
         const {message} = req.body;
@@ -29,7 +97,10 @@ export const sendMessage = async (req, res) => {
 
         await Promise.all([
             newMessage.save(),
-            Conversation.findByIdAndUpdate(conversation._id, { $push: { messages: newMessage._id } })
+            Conversation.findByIdAndUpdate(conversation._id, {
+                $push: { messages: newMessage._id },
+                $set: { updatedAt: new Date() },
+            }),
         ]);
 
         res.status(201).json({ message: "Message sent successfully", newMessage });
